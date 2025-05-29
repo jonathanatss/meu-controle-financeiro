@@ -849,12 +849,17 @@
             });
             document.getElementById('contadorInvestimentos').textContent = investimentos.length; // <<< ATUALIZAR CONTADOR
         }
-        function removerInvestimento(id) { /* ... (código anterior, já usa modal) ... */ 
-            abrirModalConfirmacao("Remover este investimento?", () => {
+        async function removerInvestimento(id) {
+            const confirmado = await abrirModalConfirmacao("Remover este investimento?");
+            if (confirmado) {
                 investimentos = investimentos.filter(i => i.id !== id);
-                atualizarListaInvestimentos(); atualizarDashboard(); salvarDados();
+                atualizarListaInvestimentos(); 
+                atualizarDashboard(); 
+                salvarDados();
                 mostrarNotificacao('Investimento removido!', 'info');
-            });
+            } else {
+                mostrarNotificacao('Remoção cancelada.', 'info');
+            }
         }
 
         // --- RESERVA DE EMERGÊNCIA --- (sem alterações na lógica principal)
