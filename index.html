@@ -445,16 +445,26 @@
                 mostrarNotificacao(`${receitas.length + despesas.length + investimentos.length} registros importados!`, 'success');
             } catch (e) { console.error(e); mostrarNotificacao('Erro ao importar. Verifique JSON.', 'error'); }
         }
-        function limparTodosDados() { /* ... (código anterior, já usa modal) ... */
-            abrirModalConfirmacao('⚠️ Limpar TODOS os dados? Irreversível!', () => {
-                 abrirModalConfirmacao('🚨 ÚLTIMA CONFIRMAÇÃO: Dados PERDIDOS. Continuar?', () => {
-                    receitas = []; despesas = []; investimentos = []; configuracaoReserva = { valorAtual: 0, gastosEssenciais: 0 };
-                    customCategoriasReceita = []; customCategoriasDespesa = []; // Limpa categorias customizadas
-                    localStorage.removeItem('dadosFinanceirosApp');
-                    popularTodosOsDropdownsDeCategoria();
-                    atualizarInterfaceCompleta();
-                    renderizarListasDeCategoriasGerenciador();
-                    mostrarNotificacao('Todos os dados removidos.', 'info');
+        function limparTodosDados() {
+            abrirModalConfirmacao('⚠️ Tem certeza que deseja limpar TODOS os dados salvos? Esta ação é irreversível!', () => {
+                 abrirModalConfirmacao('🚨 ÚLTIMA CONFIRMAÇÃO: Todos os dados serão perdidos permanentemente. Continuar?', () => {
+                    // 1. Limpar dados em memória
+                    receitas = []; 
+                    despesas = []; 
+                    investimentos = []; 
+                    configuracaoReserva = { valorAtual: 0, gastosEssenciais: 0 };
+                    customCategoriasReceita = []; 
+                    customCategoriasDespesa = []; 
+                    
+                    // 2. Remover do localStorage
+                    localStorage.removeItem('dadosFinanceirosApp'); 
+                    
+                    // 3. Atualizar toda a interface para refletir o estado limpo
+                    popularTodosOsDropdownsDeCategoria(); // Limpa e repopula dropdowns (ficarão vazios se custom estiverem vazias)
+                    atualizarInterfaceCompleta();       // Atualiza dashboard, listas de transações, etc.
+                    renderizarListasDeCategoriasGerenciador(); // Limpa as listas na aba de configurações
+                    
+                    mostrarNotificacao('Todos os dados foram removidos do navegador.', 'info');
                 });
             });
          }
