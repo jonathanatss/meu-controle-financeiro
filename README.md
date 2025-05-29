@@ -8,8 +8,7 @@ Cansado de planilhas complicadas ou aplicativos que exigem muitas informações 
 
 Esta é uma aplicação web leve e fácil de usar, projetada para te dar uma visão clara de suas receitas, despesas, investimentos e te ajudar a construir sua reserva de emergência. O melhor de tudo? **Seus dados financeiros ficam guardados apenas no seu navegador, no seu computador.** Não é necessário criar contas, fazer login ou se preocupar com seus dados na nuvem de terceiros.
 
-➡️ **Acesse agora mesmo:** [https://jonathanatss.github.io/meu-controle-financeiro/](https://jonathanatss.github.io/meu-controle-financeiro/)
-*(Lembre-se de substituir pelo link correto se o seu for diferente, especialmente se o arquivo principal não for `index.html`)*
+➡️ **Acesse agora mesmo:** [[https://jonathanatss.github.io/meu-controle-financeiro/](https://jonathanatss.github.io/meu-controle-financeiro/)](https://jonathanatss.github.io/meu-controle-financeiro/index.html)
 
 ## 🚀 Funcionalidades Principais
 
