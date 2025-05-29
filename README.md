@@ -54,7 +54,7 @@ Esta é uma aplicação web leve e fácil de usar, projetada para te dar uma vis
 
 ## 📸 Uma espiada na ferramenta!
 
-[Descrição da Imagem](![image](https://github.com/user-attachments/assets/96c8b4c5-77a1-4708-b52d-3e5441307ce2)
+![image](https://github.com/user-attachments/assets/96c8b4c5-77a1-4708-b52d-3e5441307ce2)
 
 
 ## 🌱 Próximos Passos (Ideias Futuras)
