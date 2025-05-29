@@ -227,26 +227,101 @@
         let editingInvestimentoId = null;
         let modalConfirmCallback = null;
 
-        // --- MODAL FUNCTIONS ---
+        // --- MODAL FUNCTIONS (Revisado com Promises) ---
         const confirmModal = document.getElementById('confirmModal');
         const modalMessageText = document.getElementById('modalMessageText');
         const modalConfirmButton = document.getElementById('modalConfirmButton');
         const modalCancelButton = document.getElementById('modalCancelButton');
-        function abrirModalConfirmacao(message, callback) { modalMessageText.textContent = message; modalConfirmCallback = callback; confirmModal.style.display = 'block'; }
-        function fecharModalConfirmacao() { confirmModal.style.display = 'none'; modalConfirmCallback = null; }
-        modalConfirmButton.onclick = () => { if (typeof modalConfirmCallback === 'function') modalConfirmCallback(); fecharModalConfirmacao(); };
-        modalCancelButton.onclick = fecharModalConfirmacao;
-        window.onclick = (event) => { if (event.target == confirmModal) fecharModalConfirmacao(); };
+        
+        let currentModalResolve = null;
+        let currentModalReject = null; // Não estamos usando reject explicitamente, mas é bom ter
+
+        // Funções para lidar com os cliques nos botões do modal
+        // Estas serão adicionadas e removidas como event listeners
+        const handleModalConfirm = () => {
+            confirmModal.style.display = 'none';
+            if (currentModalResolve) currentModalResolve(true); // Resolve a Promise com true (confirmado)
+            cleanupModalListeners();
+        };
+
+        const handleModalCancel = () => {
+            confirmModal.style.display = 'none';
+            if (currentModalResolve) currentModalResolve(false); // Resolve a Promise com false (cancelado)
+            cleanupModalListeners();
+        };
+        
+        const handleModalOutsideClick = (event) => {
+            if (event.target == confirmModal) {
+                confirmModal.style.display = 'none';
+                if (currentModalResolve) currentModalResolve(false); // Considera clique fora como cancelar
+                cleanupModalListeners();
+            }
+        };
+
+        function cleanupModalListeners() {
+            modalConfirmButton.removeEventListener('click', handleModalConfirm);
+            modalCancelButton.removeEventListener('click', handleModalCancel);
+            window.removeEventListener('click', handleModalOutsideClick);
+            currentModalResolve = null;
+            currentModalReject = null;
+        }
+
+        function abrirModalConfirmacao(message) {
+            return new Promise((resolve, reject) => {
+                // Limpa listeners anteriores para evitar múltiplos acionamentos
+                cleanupModalListeners(); 
+
+                currentModalResolve = resolve;
+                currentModalReject = reject;
+
+                modalMessageText.textContent = message;
+                confirmModal.style.display = 'block';
+
+                // Adiciona os event listeners para esta instância do modal
+                modalConfirmButton.addEventListener('click', handleModalConfirm);
+                modalCancelButton.addEventListener('click', handleModalCancel);
+                window.addEventListener('click', handleModalOutsideClick);
+            });
+        }
 
         // --- SISTEMA DE ARMAZENAMENTO ---
         function salvarDados() {
+            console.log("--- salvarDados: INÍCIO ---");
             try {
-                const dados = { receitas, despesas, investimentos, configuracaoReserva, customCategoriasReceita, customCategoriasDespesa, dataUltimoSave: new Date().toISOString() };
-                localStorage.setItem('dadosFinanceirosApp', JSON.stringify(dados));
-                window.dadosParaDownload = JSON.stringify(dados, null, 2);
-                console.log('Dados salvos:', dados);
+                const dados = { 
+                    receitas, 
+                    despesas, 
+                    investimentos, 
+                    configuracaoReserva, 
+                    customCategoriasReceita, 
+                    customCategoriasDespesa, 
+                    dataUltimoSave: new Date().toISOString() 
+                };
+                
+                console.log("salvarDados: Objeto 'dados' preparado. Tentando stringify...");
+                const dadosStringified = JSON.stringify(dados); // Testar stringify separadamente
+                console.log("salvarDados: Stringify bem-sucedido. Tentando salvar no localStorage...");
+
+                localStorage.setItem('dadosFinanceirosApp', dadosStringified);
+                console.log("salvarDados: Dados efetivamente salvos no localStorage.");
+                console.log("salvarDados: Conteúdo salvo (parcial):", dadosStringified.substring(0, 200) + "...");
+
+
+                window.dadosParaDownload = JSON.stringify(dados, null, 2); 
+                console.log("salvarDados: window.dadosParaDownload atualizado.");
+
+                console.log("salvarDados: CHAMANDO mostrarNotificacao para SUCESSO...");
+                mostrarNotificacao('Dados salvos manualmente com sucesso no navegador!', 'success');
+                console.log("salvarDados: DEPOIS de chamar mostrarNotificacao para sucesso.");
+                
                 return true;
-            } catch (e) { mostrarNotificacao('Erro ao salvar: ' + e.message, 'error'); return false; }
+            } catch (e) { 
+                console.error("--- ERRO em salvarDados ---:", e); 
+                mostrarNotificacao('Erro ao salvar dados: ' + e.message, 'error'); 
+                return false; 
+            } finally {
+                console.log("--- salvarDados: FIM ---");
+            }
         }
 
         function carregarDados() {
@@ -445,29 +520,54 @@
                 mostrarNotificacao(`${receitas.length + despesas.length + investimentos.length} registros importados!`, 'success');
             } catch (e) { console.error(e); mostrarNotificacao('Erro ao importar. Verifique JSON.', 'error'); }
         }
-        function limparTodosDados() {
-            abrirModalConfirmacao('⚠️ Tem certeza que deseja limpar TODOS os dados salvos? Esta ação é irreversível!', () => {
-                 abrirModalConfirmacao('🚨 ÚLTIMA CONFIRMAÇÃO: Todos os dados serão perdidos permanentemente. Continuar?', () => {
-                    // 1. Limpar dados em memória
-                    receitas = []; 
-                    despesas = []; 
-                    investimentos = []; 
-                    configuracaoReserva = { valorAtual: 0, gastosEssenciais: 0 };
-                    customCategoriasReceita = []; 
-                    customCategoriasDespesa = []; 
-                    
-                    // 2. Remover do localStorage
-                    localStorage.removeItem('dadosFinanceirosApp'); 
-                    
-                    // 3. Atualizar toda a interface para refletir o estado limpo
-                    popularTodosOsDropdownsDeCategoria(); // Limpa e repopula dropdowns (ficarão vazios se custom estiverem vazias)
-                    atualizarInterfaceCompleta();       // Atualiza dashboard, listas de transações, etc.
-                    renderizarListasDeCategoriasGerenciador(); // Limpa as listas na aba de configurações
-                    
-                    mostrarNotificacao('Todos os dados foram removidos do navegador.', 'info');
-                });
-            });
-         }
+        // --- LIMPAR TODOS OS DADOS (Revisado com async/await) ---
+        async function limparTodosDados() {
+            console.log("limparTodosDados: Iniciando primeira confirmação."); // Log de depuração
+            const confirmacao1 = await abrirModalConfirmacao('⚠️ Limpar TODOS os dados? Irreversível!');
+            
+            if (confirmacao1) {
+                console.log("limparTodosDados: Primeira confirmação OK. Iniciando segunda."); // Log
+                const confirmacao2 = await abrirModalConfirmacao('🚨 ÚLTIMA CONFIRMAÇÃO: Dados PERDIDOS. Continuar?');
+                
+                if (confirmacao2) {
+                    console.log("limparTodosDados: Segunda confirmação OK. EXECUTANDO LIMPEZA..."); // Log
+                    try {
+                        receitas = []; 
+                        despesas = []; 
+                        investimentos = []; 
+                        configuracaoReserva = { valorAtual: 0, gastosEssenciais: 0 };
+                        customCategoriasReceita = []; 
+                        customCategoriasDespesa = []; 
+                        
+                        console.log("Dados em memória zerados."); // Log
+
+                        localStorage.removeItem('dadosFinanceirosApp');
+                        console.log("localStorage 'dadosFinanceirosApp' removido."); // Log
+
+                        popularTodosOsDropdownsDeCategoria();
+                        console.log("Dropdowns de categoria repopulados."); // Log
+
+                        renderizarListasDeCategoriasGerenciador();
+                        console.log("Listas de gerenciador de categorias renderizadas."); // Log
+                        
+                        atualizarInterfaceCompleta(); 
+                        console.log("Interface completa atualizada."); // Log
+
+                        mostrarNotificacao('Todos os dados foram removidos do navegador.', 'info');
+                    } catch (error) {
+                        console.error("ERRO DENTRO DO BLOCO DE LIMPEZA:", error); // Log de erro
+                        mostrarNotificacao('Ocorreu um erro ao tentar limpar os dados.', 'error');
+                    }
+                } else {
+                    console.log("limparTodosDados: Segunda confirmação CANCELADA."); // Log
+                    mostrarNotificacao('Limpeza de dados cancelada.', 'info');
+                }
+            } else {
+                console.log("limparTodosDados: Primeira confirmação CANCELADA."); // Log
+                mostrarNotificacao('Limpeza de dados cancelada.', 'info');
+            }
+        }
+         
         function atualizarEstatisticasDados() { /* ... (código anterior) ... */ 
             document.getElementById('totalReceitasCadastradas').textContent = receitas.length;
             document.getElementById('totalDespesasCadastradas').textContent = despesas.length;
@@ -478,13 +578,61 @@
                 document.getElementById('primeiroRegistro').textContent = formatarData(todasDatas[0]);
             } else { document.getElementById('primeiroRegistro').textContent = '-'; }
         }
-        function mostrarNotificacao(mensagem, tipo) { /* ... (código anterior) ... */ 
-            const n = document.createElement('div');
-            n.style.cssText = `position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:white;font-weight:500;z-index:9999;box-shadow:0 4px 15px rgba(0,0,0,0.2);transform:translateX(400px);transition:transform .3s ease;`;
-            switch(tipo){case 'success':n.style.background='#28a745';break;case 'error':n.style.background='#dc3545';break;case 'info':n.style.background='#17a2b8';break;default:n.style.background='#6c757d';}
-            n.textContent=mensagem;document.body.appendChild(n);
-            setTimeout(()=>n.style.transform='translateX(0)',100);
-            setTimeout(()=>{n.style.transform='translateX(400px)';setTimeout(()=>document.body.removeChild(n),300)},3000);
+        function mostrarNotificacao(mensagem, tipo) {
+            console.log(`--- mostrarNotificacao: INÍCIO. Mensagem: "${mensagem}", Tipo: "${tipo}" ---`);
+            try {
+                const notificacao = document.createElement('div');
+                console.log("mostrarNotificacao: Elemento div criado.");
+
+                notificacao.style.cssText = `
+                    position: fixed; top: 20px; right: 20px; padding: 15px 20px;
+                    border-radius: 8px; color: white; font-weight: 500; z-index: 9999;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: translateX(400px);
+                    transition: transform 0.3s ease;
+                `;
+                
+                switch(tipo) {
+                    case 'success': notificacao.style.background = '#28a745'; break;
+                    case 'error': notificacao.style.background = '#dc3545'; break;
+                    case 'info': notificacao.style.background = '#17a2b8'; break;
+                    default: notificacao.style.background = '#6c757d';
+                }
+                console.log("mostrarNotificacao: Estilos aplicados. Background: ", notificacao.style.background);
+                
+                notificacao.textContent = mensagem;
+                
+                if (!document.body) { 
+                    console.error("mostrarNotificacao: ERRO FATAL - document.body não está disponível!");
+                    return; // Não podemos prosseguir sem o body
+                }
+                document.body.appendChild(notificacao);
+                console.log("mostrarNotificacao: Elemento de notificação adicionado ao document.body.");
+
+                // Forçar reflow para garantir que a transição CSS funcione
+                void notificacao.offsetWidth; 
+
+                setTimeout(() => {
+                    notificacao.style.transform = 'translateX(0)';
+                    console.log("mostrarNotificacao: Animação de entrada (transform translateX(0)) aplicada.");
+                }, 50); // Um pequeno delay pode ajudar, antes era 100, testando 50.
+                
+                setTimeout(() => {
+                    notificacao.style.transform = 'translateX(400px)';
+                    console.log("mostrarNotificacao: Animação de saída (transform translateX(400px)) iniciada.");
+                    setTimeout(() => {
+                        if (notificacao.parentNode === document.body) { // Verificar se ainda é filho do body
+                           document.body.removeChild(notificacao);
+                           console.log("mostrarNotificacao: Elemento de notificação removido do body.");
+                        } else {
+                           console.log("mostrarNotificacao: Elemento de notificação já não estava no body ao tentar remover.");
+                        }
+                    }, 350); // Tempo para a animação de saída CSS completar (era 300)
+                }, 3000); 
+            } catch (error) {
+                console.error("--- ERRO DENTRO de mostrarNotificacao ---:", error);
+            } finally {
+                console.log(`--- mostrarNotificacao: FIM para "${mensagem}" ---`);
+            }
         }
 
         // --- NAVEGAÇÃO POR ABAS --- (sem alterações)
