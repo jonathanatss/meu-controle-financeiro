@@ -54,10 +54,8 @@ Esta é uma aplicação web leve e fácil de usar, projetada para te dar uma vis
 
 ## 📸 Uma espiada na ferramenta!
 
-*(Aqui seria um ótimo lugar para adicionar uma ou duas screenshots da sua aplicação, ou um GIF animado mostrando as principais funcionalidades. Você pode fazer o upload dessas imagens para o seu repositório GitHub e depois linká-las aqui usando a sintaxe Markdown: `![Descrição da Imagem](link_para_a_imagem_no_repositorio.png)`)*
+![Descrição da Imagem](![image](https://github.com/user-attachments/assets/96c8b4c5-77a1-4708-b52d-3e5441307ce2)
 
-**Exemplo de como adicionar uma imagem que está na pasta `imagens` do seu repositório:**
-`![Dashboard da Ferramenta](imagens/dashboard_screenshot.png)`
 
 ## 🌱 Próximos Passos (Ideias Futuras)
 
@@ -70,7 +68,7 @@ Esta ferramenta está em constante evolução! Algumas ideias para o futuro incl
 
 Gostou da ferramenta? Tem alguma sugestão, crítica ou encontrou algum problema? Sua opinião é muito importante! Você pode:
 * Abrir uma "Issue" aqui no GitHub.
-* (Se você tiver um email de contato para o projeto, adicione aqui).
+* jonathanatss@gmail.com.
 
 ## 🛠️ Feito Com
 
@@ -80,10 +78,3 @@ Gostou da ferramenta? Tem alguma sugestão, crítica ou encontrou algum problema
 * Muito ❤️ e ☕!
 
 ## 📜 Licença
-
-Este projeto é de código aberto. Sinta-se livre para usar, modificar e aprender com ele!
-*(Sugestão: Considere adicionar um arquivo de `LICENSE` ao seu projeto, como a licença MIT, que é bem permissiva).*
-
----
-
-Espero que este README ajude a apresentar sua ferramenta de forma clara e convidativa! Lembre-se de substituir os placeholders (como o link da aplicação e a sugestão de imagem) pelos seus próprios.
